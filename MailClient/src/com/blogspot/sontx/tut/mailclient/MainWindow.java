@@ -20,6 +20,8 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 public class MainWindow extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
 
@@ -92,8 +94,8 @@ public class MainWindow extends JFrame implements ActionListener {
 		public Component getListCellRendererComponent(JList<? extends Message> list, Message value, int index,
 				boolean isSelected, boolean cellHasFocus) {
 			try {
-				setText(String.format("[%s] [%s] %s", value.getSentDate(), getSendFromString(value.getFrom()),
-						value.getSubject()));
+				setText(String.format("<html><font size=\"6\">%s</font> <br/> <font size=\"5\">%s</font> <br/> <font size=\"4\">%s</font></html>",StringEscapeUtils.escapeXml(value.getSubject()),
+						value.getSentDate(), getSendFromString(value.getFrom())));
 			} catch (MessagingException e) {
 				setText(e.getMessage());
 				setBackground(Color.RED);
@@ -103,7 +105,7 @@ public class MainWindow extends JFrame implements ActionListener {
 				setBackground(HIGHLIGHT_COLOR);
 				setForeground(Color.white);
 			} else {
-				setBackground(Color.white);
+				setBackground(index % 2 == 0 ? Color.white : Color.lightGray);
 				setForeground(Color.black);
 			}
 			return this;
