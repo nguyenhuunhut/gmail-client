@@ -1,15 +1,22 @@
 package com.blogspot.sontx.tut.mailclient;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.Transport;
 import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
 public final class MailManager {
@@ -76,8 +83,30 @@ public final class MailManager {
 		store = receivingingMailSession.getStore("imaps");
 		store.connect(RECEIVING_HOST, userName, password);
 		folder = store.getFolder("INBOX");
-		folder.open(Folder.READ_ONLY);
+		folder.open(Folder.READ_WRITE);
 		messages = folder.getMessages();
+	}
+
+	public List<File> downloadAttachs(Message message) throws IOException, MessagingException {
+		String contentType = message.getContentType();
+		if (contentType.toUpperCase().indexOf("multipart".toUpperCase()) > -1) {
+			List<File> files = new ArrayList<>();
+			String currentDir = System.getProperty("user.dir");
+			File downloadDir = new File(currentDir, "download");
+			if (!downloadDir.isDirectory())
+				downloadDir.mkdirs();
+			Multipart multipart = (Multipart) message.getContent();
+			for (int i = 0; i < multipart.getCount(); i++) {
+				MimeBodyPart part = (MimeBodyPart) multipart.getBodyPart(i);
+				if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
+					File file = new File(downloadDir, part.getFileName());
+					part.saveFile(file);
+					files.add(file);
+				}
+			}
+			return files;
+		}
+		return null;
 	}
 
 	public Message[] readAllMails() throws MessagingException {
